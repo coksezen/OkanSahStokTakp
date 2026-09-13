@@ -1,0 +1,35 @@
+name: One-time iOS status bar theme fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply iOS status bar theme patch
+        run: python .github/scripts/fix-ios-status-bar-theme.py
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify build
+        run: npm run build
+
+      - name: Commit changes and cleanup
+        run: |
+          rm -f .github/scripts/fix-ios-status-bar-theme.py
+          rm -f .github/workflows/fix-ios-status-bar-theme.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync iOS status bar with app theme"
+          git push
