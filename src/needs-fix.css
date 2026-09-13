@@ -1,0 +1,34 @@
+/* Mobilde işlem butonu olmayan ürün/ihtiyaç satırlarının metnini solda ve alt alta tutar.
+   styles.css içindeki genel :last-child kuralı tek div'li satırlarda metin alanını
+   yanlışlıkla işlem alanı gibi hizalayabildiği için bu dosya en son yüklenir. */
+.productRow > div:only-child {
+  width: 100%;
+  min-width: 0;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  text-align: left !important;
+}
+
+.productRow > div:only-child > b,
+.productRow > div:only-child > small {
+  display: block !important;
+  width: 100%;
+  text-align: left !important;
+}
+
+.productRow > div:only-child > b {
+  margin: 0;
+}
+
+.productRow > div:only-child > small {
+  margin-top: 3px;
+}
+
+@media (max-width: 520px) {
+  .productRow > div:only-child {
+    flex-wrap: nowrap !important;
+  }
+}
