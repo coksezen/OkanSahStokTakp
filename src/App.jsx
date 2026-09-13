@@ -74,6 +74,9 @@ const [needForm,setNeedForm]=useState({
   const swipeStartX=useRef(null)
 const swipeStartY=useRef(null)
   useEffect(()=>{
+    // index.html only uses startup-dark while React is loading.
+    // Once the app is mounted, the selected app theme must be the single source of truth.
+    document.documentElement.classList.remove('startup-dark')
     document.documentElement.classList.toggle('dark',darkMode)
     localStorage.setItem('okan-sah-theme',darkMode ? 'dark' : 'light')
 
