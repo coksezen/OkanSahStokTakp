@@ -31,7 +31,11 @@ const fmt = d => d ? new Intl.DateTimeFormat('tr-TR').format(new Date(d+'T12:00:
 
 export default function App(){
   const [session,setSession]=useState(null), [loading,setLoading]=useState(true)
-  const [showSplash,setShowSplash]=useState(true)
+  const [showSplash,setShowSplash]=useState(()=>{
+    const skip=sessionStorage.getItem('okan-sah-skip-splash')==='1'
+    if(skip) sessionStorage.removeItem('okan-sah-skip-splash')
+    return !skip
+  })
   const [darkMode,setDarkMode]=useState(()=>{
     const saved=localStorage.getItem('okan-sah-theme')
     if(saved) return saved==='dark'
@@ -48,7 +52,14 @@ export default function App(){
     try{return JSON.parse(localStorage.getItem('okan-sah-offline-queue') || '[]')}catch{return []}
   })
   const [quickScanAfterSave,setQuickScanAfterSave]=useState(false)
-  const [tab,setTab]=useState(new URLSearchParams(location.search).get('tab') || 'home')
+  const [tab,setTab]=useState(()=>{
+    const returnTab=sessionStorage.getItem('okan-sah-theme-return-tab')
+    if(returnTab){
+      sessionStorage.removeItem('okan-sah-theme-return-tab')
+      return returnTab
+    }
+    return new URLSearchParams(location.search).get('tab') || 'home'
+  })
   const [products,setProducts]=useState([]), [batches,setBatches]=useState([]), [query,setQuery]=useState('')
   const [login,setLogin]=useState({email:'',password:''}), [loginError,setLoginError]=useState('')
   const [modal,setModal]=useState(null), [productForm,setProductForm]=useState(emptyProduct), [batchForm,setBatchForm]=useState(emptyBatch)
@@ -78,13 +89,36 @@ const swipeStartY=useRef(null)
     // Once the app is mounted, the selected app theme must be the single source of truth.
     document.documentElement.classList.remove('startup-dark')
     document.documentElement.classList.toggle('dark',darkMode)
+    document.documentElement.style.colorScheme=darkMode ? 'dark' : 'light'
     localStorage.setItem('okan-sah-theme',darkMode ? 'dark' : 'light')
 
     const themeMeta=document.querySelector('meta[name="theme-color"]')
     if(themeMeta){
       themeMeta.setAttribute('content',darkMode ? '#080d18' : '#f8fafc')
     }
+
+    const statusMeta=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+    if(statusMeta){
+      statusMeta.setAttribute('content',darkMode ? 'black' : 'default')
+    }
   },[darkMode])
+
+  function toggleTheme(){
+    const next=!darkMode
+    localStorage.setItem('okan-sah-theme',next ? 'dark' : 'light')
+    setDarkMode(next)
+
+    // iOS ana-ekran PWA'si status bar rengini çalışma sırasında yenilemiyor.
+    // Seçimi kaydedip görünmez sayılabilecek tek seferlik yenilemeyle iOS'a yeni modu okutuyoruz.
+    const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)
+    const isStandalone=window.navigator.standalone===true || window.matchMedia?.('(display-mode: standalone)').matches
+
+    if(isIOS && isStandalone){
+      sessionStorage.setItem('okan-sah-skip-splash','1')
+      sessionStorage.setItem('okan-sah-theme-return-tab',tab)
+      setTimeout(()=>window.location.reload(),40)
+    }
+  }
 
   useEffect(()=>{
     localStorage.setItem('okan-sah-recent-products',JSON.stringify(recentProducts))
@@ -1861,7 +1895,7 @@ const dashboard={
             <button
               type="button"
               className={`themeToggle ${darkMode ? 'on' : ''}`}
-              onClick={()=>setDarkMode(v=>!v)}
+              onClick={toggleTheme}
               aria-pressed={darkMode}
               aria-label={darkMode ? 'Gece modunu kapat' : 'Gece modunu aç'}
             >

@@ -1,4 +1,4 @@
-const CACHE = 'okan-sah-stok-v7'
+const CACHE = 'okan-sah-stok-v8'
 
 const START_FILES = [
   '/',
