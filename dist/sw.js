@@ -1,4 +1,4 @@
-const CACHE = 'okan-sah-stok-v5'
+const CACHE = 'okan-sah-stok-v7'
 
 const START_FILES = [
   '/',
@@ -15,15 +15,36 @@ self.addEventListener('install', event => {
 })
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys
-          .filter(key => key !== CACHE)
-          .map(key => caches.delete(key))
-      ))
-      .then(() => self.clients.claim())
-  )
+  event.waitUntil((async () => {
+    const keys = await caches.keys()
+    const hadOldCache = keys.some(key => key !== CACHE)
+
+    await Promise.all(
+      keys
+        .filter(key => key !== CACHE)
+        .map(key => caches.delete(key))
+    )
+
+    await self.clients.claim()
+
+    // Yeni sürüm geldiğinde açık PWA penceresini bir kez yenile.
+    // Böylece iPhone ana ekran uygulaması eski JS'i göstermeye devam etmez.
+    if(hadOldCache){
+      const windows = await self.clients.matchAll({
+        type:'window',
+        includeUncontrolled:true
+      })
+
+      await Promise.all(
+        windows.map(client => {
+          if('navigate' in client){
+            return client.navigate(client.url).catch(() => null)
+          }
+          return null
+        })
+      )
+    }
+  })())
 })
 
 self.addEventListener('fetch', event => {

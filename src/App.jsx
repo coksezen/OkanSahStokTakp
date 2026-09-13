@@ -1529,6 +1529,7 @@ const dashboard={
     <div className="list">
       {needs
         .filter(n=>n.branch===selectedBranch)
+        .sort((a,b)=>Number(Boolean(a.completed))-Number(Boolean(b.completed)))
         .map(n=>
          <div className="productRow" key={n.id}>
   <div>
